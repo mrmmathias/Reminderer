@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="ExtraText">
+
+    <TextView
+        android:id="@+id/not_authenticated"
+        android:layout_width="208dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="220dp"
+        android:textSize="12sp"
+        android:text="@string/wrong_password"
+        android:textColor="@color/red"
+        android:visibility="invisible"/>
+
+    <EditText
+        android:id="@+id/username"
+        android:layout_width="208dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:hint="@string/username"
+        android:inputType="textPersonName"
+        android:keyboardNavigationCluster="true"
+        android:textSize="20sp"/>
+
+    <EditText
+        android:id="@+id/password"
+        android:layout_width="208dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:textSize="20sp"/>
+
+    <CheckBox
+        android:id="@+id/rememberme"
+        android:layout_width="208dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:textSize="12sp"
+        android:text="@string/remembeme"/>
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/login"
+        android:layout_width="208dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:text="@string/login"
+        android:ellipsize="start"
+        android:background="@color/main_green"
+        android:textColor="@color/white"
+        android:onClick="login"/>
+
+    <TextView
+        android:id="@+id/new_account"
+        android:layout_width="208dp"
+        android:layout_height="wrap_content"
+        android:text="@string/new_account"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="60dp"
+        android:textColor="@color/second_green"
+        android:textStyle="italic"
+        android:focusable="true"
+        android:clickable="true"/>
+
+
+
+
+</LinearLayout>

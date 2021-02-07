@@ -1,17 +1,16 @@
 package com.roimaa.reminderer;
 
+import android.content.Intent;
 import android.os.Bundle;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import android.view.View;
-
-import android.view.Menu;
-import android.view.MenuItem;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(view, "TODO: Add a reminder", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
         });
@@ -47,8 +46,14 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.action_logout) {
+            PrefUtils.putBoolean(getApplicationContext(), PrefUtils.REMEMBER_LOGIN, false);
+            PrefUtils.putString(getApplicationContext(), PrefUtils.LOGGED_USER, "");
+
+            Intent loginscreen = new Intent(getApplicationContext(), LoginActivity.class);
+            loginscreen.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(loginscreen);
+            this.finish();
         }
 
         return super.onOptionsItemSelected(item);
