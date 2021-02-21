@@ -44,6 +44,20 @@ public class KeyStoreHelper {
     }
 
     public Boolean createNewAccount(String userName, String password) {
+        KeyStore ks = getKeyStore();
+        if (null == ks) return false;
+        PrivateKey privateKey;
+
+        try {
+            Certificate cert = ks.getCertificate(userName);
+            if (null != cert) {
+                Log.e(TAG, "User name already taken");
+                return false;
+            }
+        } catch (KeyStoreException e) {
+
+        }
+
         AlgorithmParameterSpec spec =  new KeyGenParameterSpec.Builder(userName, KeyProperties.PURPOSE_SIGN)
                 .setCertificateSubject(new X500Principal("CN=" + userName))
                 .setDigests(KeyProperties.DIGEST_SHA256)
@@ -63,10 +77,6 @@ public class KeyStoreHelper {
             Log.e(TAG, "Generating key failed", e);
             return false;
         }
-
-        KeyStore ks = getKeyStore();
-        if (null == ks) return false;
-        PrivateKey privateKey;
 
         try {
             privateKey = (PrivateKey) ks.getKey(userName, null);

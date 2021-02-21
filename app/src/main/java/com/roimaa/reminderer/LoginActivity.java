@@ -94,7 +94,9 @@ public class LoginActivity extends Activity {
                 String password = newPassword.getText().toString().trim();
 
                 if (!user.isEmpty() && !password.isEmpty()) {
-                    KeyStoreHelper.getInstance(getApplicationContext()).createNewAccount(user, password);
+                    if (true == KeyStoreHelper.getInstance(getApplicationContext()).createNewAccount(user, password)) {
+                        DBHelper.getInstance(getApplicationContext()).createUser(user);
+                    }
                 }
                 dialog.cancel();
             }
