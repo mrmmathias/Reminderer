@@ -1,5 +1,6 @@
 package com.roimaa.reminderer;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.roimaa.reminderer.DB.Reminder;
 
-import java.util.Date;
 import java.util.List;
 
 
@@ -42,21 +42,22 @@ public class MainFragment extends Fragment implements RedminderDeleteCb {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Launch create reminder
-                Reminder tempReminder = new Reminder();
-                tempReminder.setUserId(1);
-                tempReminder.setMessage("Temp Reminder");
-                tempReminder.setReminderTime(new Date());
-                DBHelper.getInstance(getContext()).addReminder(tempReminder);
-                update();
+                Intent intent = new Intent(getContext(), AddReminder.class);
+                getContext().startActivity(intent);
             }
         });
 
         update();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        update();
+    }
+
     public void update() {
-        Log.d(TAG, "update()");
+        Log.w(TAG, "update()");
         getReminders(PrefUtils.getString(getContext(), PrefUtils.LOGGED_USER));
     }
 

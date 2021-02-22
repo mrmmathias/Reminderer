@@ -1,6 +1,7 @@
 package com.roimaa.reminderer;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +43,7 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
             mDeleteCb.deleteReminder(r.getId());
         });
 
+
     }
 
     @Override
@@ -59,11 +61,15 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
             message = itemView.findViewById(R.id.message);
             reminderTime = itemView.findViewById(R.id.reminder_time);
             delete = itemView.findViewById(R.id.delete);
+            reminder.setOnClickListener(this);
         }
 
         @Override
         public void onClick(View v) {
-
+            Reminder reminder = mReminderList.get(getAdapterPosition());
+            Intent intent = new Intent(mContext, AddReminder.class);
+            intent.putExtra("reminderId", reminder.getId());
+            mContext.startActivity(intent);
         }
     }
 }

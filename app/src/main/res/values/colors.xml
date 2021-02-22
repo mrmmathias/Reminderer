@@ -10,4 +10,5 @@
     <color name="red">#ef0f22</color>
     <color name="main_green">#4CAF50</color>
     <color name="second_green">#2E7D32</color>
+    <color name="hint">#808080</color>
 </resources>

@@ -27,7 +27,7 @@ public class DBHelper {
 
     private DBHelper(Context context) {
         mContext = context;
-        db = Room.databaseBuilder(mContext, RemindererDataBase.class, "reminderer").build();
+        db = Room.databaseBuilder(mContext, RemindererDataBase.class, "reminderer").allowMainThreadQueries().build();
     }
 
     public void createUser(String user) {
@@ -59,6 +59,10 @@ public class DBHelper {
         return db.userDao().findByName(userName);
     }
 
+    public Reminder getReminder(int Id) {
+        return db.reminderDao().getById(Id);
+    }
+
     public List<Reminder> getUserReminders(String user) {
         User wantedUser = getUser(user);
         if (null == wantedUser) return null;
@@ -76,6 +80,21 @@ public class DBHelper {
 
         if (null != toAdd) {
             AddReminder ar = new AddReminder();
+            ar.execute();
+        }
+    }
+
+    public void updateReminder(Reminder toEdit) {
+        class EditReminder extends AsyncTask<Void, Void, Void> {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                db.reminderDao().update(toEdit);
+                return null;
+            }
+        }
+
+        if (null != toEdit) {
+            EditReminder ar = new EditReminder();
             ar.execute();
         }
     }

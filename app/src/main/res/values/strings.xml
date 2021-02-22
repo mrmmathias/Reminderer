@@ -19,4 +19,8 @@
     <string name="cancel">Cancel</string>
     <string name="no_items">No reminders yet :(</string>
     <string name="wrong_password">Wrong username or password</string>
+    <string name="create">Create</string>
+    <string name="message">Message</string>
+    <string name="save">Save</string>
+    <string name="reminder_not_valid">Reminder not valid!</string>
 </resources>
