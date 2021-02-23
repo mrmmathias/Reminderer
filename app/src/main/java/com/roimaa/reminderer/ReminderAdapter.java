@@ -13,6 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.roimaa.reminderer.DB.Reminder;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ReminderViewHolder> {
@@ -37,13 +40,18 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
     public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
         Reminder r = mReminderList.get(position);
         holder.message.setText(r.getMessage());
-        holder.reminderTime.setText(r.getReminderTime().toString());
+
+        Date reminderTime = r.getReminderTime();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(reminderTime);
+        String formattedTime = new SimpleDateFormat("dd.MM.yyyy H:mm").format(calendar.getTime());
+        holder.reminderTime.setText(formattedTime);
 
         holder.delete.setOnClickListener(v -> {
+            mReminderList.remove(mReminderList.get(position));
+            notifyDataSetChanged();
             mDeleteCb.deleteReminder(r.getId());
         });
-
-
     }
 
     @Override

@@ -23,4 +23,6 @@
     <string name="message">Message</string>
     <string name="save">Save</string>
     <string name="reminder_not_valid">Reminder not valid!</string>
+    <string name="reminder_removed">Reminder removed</string>
+    <string name="undo">UNDO</string>
 </resources>
