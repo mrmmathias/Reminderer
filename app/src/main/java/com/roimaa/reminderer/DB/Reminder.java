@@ -32,6 +32,9 @@ public class Reminder {
     @ColumnInfo(name = "reminder_seen")
     private boolean reminderSeen;
 
+    @ColumnInfo(name = "remind")
+    private boolean remind;
+
     public int getId() {
         return id;
     }
@@ -94,5 +97,13 @@ public class Reminder {
 
     public void setReminderSeen(boolean reminderSeen) {
         this.reminderSeen = reminderSeen;
+    }
+
+    public boolean isRemind() {
+        return remind;
+    }
+
+    public void setRemind(boolean remind) {
+        this.remind = remind;
     }
 }

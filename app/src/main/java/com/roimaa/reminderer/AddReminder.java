@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +30,7 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
     private TextView mEditDate;
     private TextView mEditTime;
     private Button mButton;
+    private CheckBox mRemindMe;
     private int mReminderId;
 
     @SuppressLint({"ClickableViewAccessibility", "SimpleDateFormat"})
@@ -40,6 +42,7 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
         mEditMessage = findViewById(R.id.editMessage);
         mEditDate = findViewById(R.id.editTextDate);
         mEditTime = findViewById(R.id.editTextTime);
+        mRemindMe = findViewById(R.id.remindMe);
         mButton = findViewById(R.id.button);
         mButton.setOnClickListener(createReminder);
 
@@ -93,6 +96,7 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
             mEditDate.setHint(new SimpleDateFormat("dd.MM.yyyy").format(calendar.getTime()));
             mEditTime.setHint(new SimpleDateFormat("H:mm").format(calendar.getTime()));
             mEditMessage.setText(toEdit.getMessage());
+            mRemindMe.setChecked(toEdit.isRemind());
             mButton.setText(R.string.save);
         }
     }
@@ -137,11 +141,13 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
                 toAdd.setMessage(mEditMessage.getText().toString());
                 toAdd.setCreationTime(new Date());
                 toAdd.setReminderTime(d.getTime());
+                toAdd.setRemind(mRemindMe.isChecked());
                 DBHelper.getInstance(getApplicationContext()).addReminder(toAdd);
             } else {
                 Reminder toEdit = DBHelper.getInstance(getApplicationContext()).getReminder(mReminderId);
                 toEdit.setMessage(mEditMessage.getText().toString());
                 toEdit.setReminderTime(d.getTime());
+                toEdit.setRemind(mRemindMe.isChecked());
                 DBHelper.getInstance(getApplicationContext()).updateReminder(toEdit);
             }
             AddReminder.this.finish();

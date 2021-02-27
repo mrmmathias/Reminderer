@@ -25,4 +25,5 @@
     <string name="reminder_not_valid">Reminder not valid!</string>
     <string name="reminder_removed">Reminder removed</string>
     <string name="undo">UNDO</string>
+    <string name="remind_me">Remind me</string>
 </resources>

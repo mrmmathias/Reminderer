@@ -9,7 +9,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Reminderer">
-        <activity android:name=".AddReminder"></activity>
+        <service
+            android:name=".WorkManagerService"
+            android:enabled="true"
+            android:exported="false"></service>
+
+        <activity android:name=".AddReminder" />
         <activity
             android:name=".LoginActivity"
             android:label="@string/app_name"
@@ -24,7 +29,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Reminderer.NoActionBar"></activity>
+            android:theme="@style/Theme.Reminderer.NoActionBar" />
     </application>
 
 </manifest>
