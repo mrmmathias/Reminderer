@@ -71,6 +71,7 @@ public class DBHelper {
     public User getUser(String userName) {
         return db.userDao().findByName(userName);
     }
+    public User getUser(int id) { return db.userDao().findById(id); }
 
     public Reminder getReminder(int Id) {
         return db.reminderDao().getById(Id);

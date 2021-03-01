@@ -13,12 +13,14 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 import com.roimaa.reminderer.DB.Reminder;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -26,6 +28,8 @@ public class MainFragment extends Fragment implements RedminderDeleteCb {
     private static final String TAG = MainFragment.class.getSimpleName();
     private RecyclerView mReminderRecylerView;
     private CoordinatorLayout myCoordinatorLayout;
+    private ReminderAdapter mAdapter;
+    private SwipeRefreshLayout mSwipeContainer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,6 +41,15 @@ public class MainFragment extends Fragment implements RedminderDeleteCb {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         myCoordinatorLayout = view.findViewById(R.id.myCoordinatorLayout);
+        mSwipeContainer = view.findViewById(R.id.swiperefresh);
+        mSwipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                mAdapter.getFilter().filter(null);
+                mSwipeContainer.setRefreshing(false);
+            }
+        });
+
         mReminderRecylerView = view.findViewById(R.id.recyleViewReminders);
         mReminderRecylerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -74,9 +87,10 @@ public class MainFragment extends Fragment implements RedminderDeleteCb {
             @Override
             protected void onPostExecute(List<Reminder> reminders) {
                 super.onPostExecute(reminders);
-                ReminderAdapter adapter = new ReminderAdapter(getContext(), reminders,
+                mAdapter = new ReminderAdapter(getContext(), reminders,
                         MainFragment.this::deleteReminder);
-                mReminderRecylerView.setAdapter(adapter);
+                mReminderRecylerView.setAdapter(mAdapter);
+                mAdapter.getFilter().filter((new Date()).toString());
             }
         }
 

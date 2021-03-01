@@ -13,10 +13,18 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <view class="androidx.recyclerview.widget.RecyclerView"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swiperefresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <view class="androidx.recyclerview.widget.RecyclerView"
         android:id="@+id/recyleViewReminders"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"

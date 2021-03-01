@@ -26,4 +26,7 @@
     <string name="reminder_removed">Reminder removed</string>
     <string name="undo">UNDO</string>
     <string name="remind_me">Remind me</string>
+    <string name="channel_name">RemindererNtfChannel</string>
+    <string name="notification_title">Remember</string>
+    <string name="delete">DELETE</string>
 </resources>

@@ -2,9 +2,12 @@ package com.roimaa.reminderer;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -14,18 +17,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.roimaa.reminderer.DB.Reminder;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ReminderViewHolder> {
+public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ReminderViewHolder> implements Filterable {
     private Context mContext;
     private List<Reminder> mReminderList;
+    private List<Reminder> mReminderListFiltered;
     private RedminderDeleteCb mDeleteCb;
 
     public ReminderAdapter(Context context, List<Reminder> reminderList, RedminderDeleteCb deleteCb) {
         this.mContext = context;
         this.mReminderList = reminderList;
+        this.mReminderListFiltered = this.mReminderList;
         this.mDeleteCb = deleteCb;
     }
 
@@ -38,7 +44,7 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
 
     @Override
     public void onBindViewHolder(@NonNull ReminderViewHolder holder, int position) {
-        Reminder r = mReminderList.get(position);
+        Reminder r = mReminderListFiltered.get(position);
         holder.message.setText(r.getMessage());
 
         Date reminderTime = r.getReminderTime();
@@ -48,7 +54,7 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
         holder.reminderTime.setText(formattedTime);
 
         holder.delete.setOnClickListener(v -> {
-            mReminderList.remove(mReminderList.get(position));
+            mReminderListFiltered.remove(mReminderListFiltered.get(position));
             notifyDataSetChanged();
             mDeleteCb.deleteReminder(r.getId());
         });
@@ -56,7 +62,43 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
 
     @Override
     public int getItemCount() {
-        return mReminderList.size();
+        return mReminderListFiltered.size();
+    }
+
+    @Override
+    public Filter getFilter() {
+        Filter filter = new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                Log.d("FilterResults", "performFiltering: " + constraint);
+                FilterResults filterResults = new FilterResults();
+                List<Reminder> resultsModel = new ArrayList<>();
+
+                if (null == constraint) {
+                    filterResults.count = mReminderList.size();
+                    filterResults.values = mReminderList;
+                } else {
+                    Date now = new Date();
+                    for (Reminder reminder : mReminderList) {
+                        Log.d("Date", "Date: " + reminder.getReminderTime());
+                        if (reminder.getReminderTime().before(now))
+                            resultsModel.add(reminder);
+                    }
+                    filterResults.count = resultsModel.size();
+                    filterResults.values = resultsModel;
+                }
+
+                return filterResults;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                mReminderListFiltered = (List<Reminder>) results.values;
+                notifyDataSetChanged();
+            }
+        };
+
+        return filter;
     }
 
     class ReminderViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

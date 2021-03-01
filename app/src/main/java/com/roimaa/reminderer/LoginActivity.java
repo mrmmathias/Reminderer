@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,7 +14,13 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.roimaa.reminderer.DB.Reminder;
+import com.roimaa.reminderer.DB.User;
+
+import static com.roimaa.reminderer.DBHelper.getInstance;
+
 public class LoginActivity extends Activity {
+    private final static String TAG = LoginActivity.class.getSimpleName();
 
     private EditText mUserName;
     private EditText mPassword;
@@ -21,6 +28,7 @@ public class LoginActivity extends Activity {
     private TextView mNewAccount;
     private TextView mWrongPassword;
     private AlertDialog mNewAccountDialog;
+    private static int mLaunchReminderId;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -30,6 +38,10 @@ public class LoginActivity extends Activity {
         if (PrefUtils.getBoolean(getApplicationContext(), PrefUtils.REMEMBER_LOGIN)) {
             launchMain();
         }
+
+        Intent startIntent = getIntent();
+        mLaunchReminderId = startIntent.getIntExtra("reminderId", -1);
+
         setContentView(R.layout.activity_login);
 
         mUserName = findViewById(R.id.username);
@@ -37,21 +49,51 @@ public class LoginActivity extends Activity {
         mRemember = findViewById(R.id.rememberme);
         mWrongPassword = findViewById(R.id.not_authenticated);
         mNewAccount = findViewById(R.id.new_account);
-        mNewAccount.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (null == mNewAccountDialog) {
-                    mNewAccountDialog = newAccount();
-                    mNewAccountDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            mNewAccountDialog = null;
-                        }
-                    });
+        if (-1 == mLaunchReminderId) {
+            mNewAccount.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (null == mNewAccountDialog) {
+                        mNewAccountDialog = newAccount();
+                        mNewAccountDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                            @Override
+                            public void onCancel(DialogInterface dialog) {
+                                mNewAccountDialog = null;
+                            }
+                        });
+                    }
+                    return true;
                 }
-                return true;
+            });
+        } else {
+            mNewAccount.setVisibility(View.GONE);
+            Reminder fromNtf = getInstance(getApplicationContext()).getReminder(mLaunchReminderId);
+            if (null == fromNtf) {
+                // We reached here from notification, but the reminder is gone
+                Log.wtf(TAG, "No reminder found for the notification!");
+                Intent returnIntent = new Intent();
+                setResult(Activity.RESULT_CANCELED, returnIntent);
+                this.finish();
+            } else {
+                int ntfUserId = fromNtf.getUserId();
+                User ntfUser = DBHelper.getInstance(getApplicationContext()).getUser(ntfUserId);
+
+                mUserName.setText(ntfUser.getUserName());
+                mUserName.setFocusable(false);
+                mUserName.setClickable(false);
             }
-        });
+        }
+    }
+
+    @Override
+    public void onBackPressed () {
+        if (-1 != mLaunchReminderId) {
+            Intent returnIntent = new Intent();
+            setResult(Activity.RESULT_CANCELED, returnIntent);
+            this.finish();
+        } else {
+            super.onBackPressed();
+        }
     }
 
     public void login(View view) {
@@ -74,7 +116,15 @@ public class LoginActivity extends Activity {
                 PrefUtils.putBoolean(getApplicationContext(), PrefUtils.REMEMBER_LOGIN, true);
             }
             PrefUtils.putString(getApplicationContext(), PrefUtils.LOGGED_USER, username);
-            launchMain();
+
+            if (-1 == mLaunchReminderId) {
+                launchMain();
+            } else {
+                Intent returnIntent = new Intent();
+                returnIntent.putExtra("reminderId", mLaunchReminderId);
+                setResult(Activity.RESULT_OK, returnIntent);
+                this.finish();
+            }
         } else {
             mWrongPassword.setVisibility(View.VISIBLE);
         }

@@ -13,4 +13,6 @@ public interface UserDao {
     @Query("SELECT * FROM User WHERE user_name = :userName")
     User findByName(String userName);
 
+    @Query("SELECT * FROM User WHERE uid = :Id")
+    User findById(int Id);
 }

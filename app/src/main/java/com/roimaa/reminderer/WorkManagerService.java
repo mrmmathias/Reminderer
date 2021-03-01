@@ -27,6 +27,7 @@ public class WorkManagerService extends Service {
     public static final int ADD = 1;
     public static final int REMOVE = 2;
     public static final int UPDATE = 3;
+    public static final int DELETE = 4;
 
     private static final String TAG = WorkManagerService.class.getSimpleName();
 
@@ -91,6 +92,14 @@ public class WorkManagerService extends Service {
                         updateMsg.copyFrom(msg);
                         updateMsg.what = ADD;
                         this.sendMessage(updateMsg);
+                    }
+                    break;
+
+                case DELETE:
+                    Log.d(TAG, "DELETE: " + msg.arg1);
+                    Reminder deleted = DBHelper.getInstance(getApplicationContext()).getReminder(msg.arg1);
+                    if (null != deleted) {
+                        DBHelper.getInstance(getApplicationContext()).deleteReminder(msg.arg1);
                     }
                     break;
 

@@ -25,6 +25,7 @@ import static android.view.MotionEvent.ACTION_UP;
 
 public class AddReminder extends AppCompatActivity implements DatePicker.DatePickedListener, TimePicker.TimePickedListener {
     private final static String TAG = AddReminder.class.getSimpleName();
+    private final static int LOGIN_RESULT = 123;
 
     private TextView mEditMessage;
     private TextView mEditDate;
@@ -37,6 +38,10 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Intent startIntent = getIntent();
+        mReminderId = startIntent.getIntExtra("reminderId", -1);
+
         setContentView(R.layout.activity_add_reminder);
 
         mEditMessage = findViewById(R.id.editMessage);
@@ -45,9 +50,6 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
         mRemindMe = findViewById(R.id.remindMe);
         mButton = findViewById(R.id.button);
         mButton.setOnClickListener(createReminder);
-
-        Intent startIntent = getIntent();
-        mReminderId = startIntent.getIntExtra("reminderId", -1);
 
         setHintTexts();
 
@@ -82,6 +84,38 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
                 return false;
             }
         });
+    }
+
+    @Override
+    protected void onResume () {
+        super.onResume();
+
+        if (PrefUtils.getString(this, PrefUtils.LOGGED_USER).isEmpty()) {
+            // User has logged out -> password needed
+            Intent loginscreen = new Intent(this, LoginActivity.class);
+            loginscreen.putExtra("reminderId", mReminderId);
+            startActivityForResult(loginscreen, LOGIN_RESULT);
+        }
+    }
+
+    @Override
+    protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        switch (requestCode) {
+            case LOGIN_RESULT:
+                Log.w(TAG, "result received: " + requestCode);
+                if (RESULT_OK == resultCode) {
+                    mReminderId = data.getIntExtra("reminderId", -1);
+                    Log.w(TAG, "mReminderId: " + mReminderId);
+                } else {
+                    this.finish();
+                }
+                break;
+
+            default:
+                break;
+        }
     }
 
     private void setHintTexts() {
