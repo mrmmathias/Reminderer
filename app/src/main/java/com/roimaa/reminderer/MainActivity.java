@@ -34,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+        if (id == R.id.action_location) {
+            Intent map = new Intent(this, LocationActivity.class);
+            startActivity(map);
+        }
+
         if (id == R.id.action_logout) {
             PrefUtils.putBoolean(getApplicationContext(), PrefUtils.REMEMBER_LOGIN, false);
             PrefUtils.putString(getApplicationContext(), PrefUtils.LOGGED_USER, "");

@@ -29,4 +29,6 @@
     <string name="channel_name">RemindererNtfChannel</string>
     <string name="notification_title">Remember</string>
     <string name="delete">DELETE</string>
+    <string name="title_activity_location">Map</string>
+    <string name="action_location">Set location</string>
 </resources>

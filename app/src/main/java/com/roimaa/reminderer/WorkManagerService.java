@@ -1,5 +1,7 @@
 package com.roimaa.reminderer;
 
+import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
@@ -10,16 +12,22 @@ import android.os.Message;
 import android.os.Process;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.work.Data;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.WorkRequest;
 
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.roimaa.reminderer.DB.Reminder;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
 
 public class WorkManagerService extends Service {
     public static final String Id = "id";
@@ -30,6 +38,9 @@ public class WorkManagerService extends Service {
     public static final int DELETE = 4;
 
     private static final String TAG = WorkManagerService.class.getSimpleName();
+    private static final int GEOFENCE_RADIUS = 100;
+    private static final int GEOFENCE_EXPIRATION = 10 * 60 * 1000;
+    private static final int GEOFENCE_DWELL_DELAY = 30 * 1000;
 
     private Looper mServiceLooper;
     private WorkManagerServiceHandler mServiceHandler;
@@ -48,6 +59,7 @@ public class WorkManagerService extends Service {
             super(looper);
         }
 
+        @SuppressLint("MissingPermission")
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -55,19 +67,53 @@ public class WorkManagerService extends Service {
                     Log.d(TAG, "ADD: " + msg.arg1);
                     Reminder added = DBHelper.getInstance(getApplicationContext()).getReminder(msg.arg1);
                     if (null != added) {
-                        Data workerData = new Data.Builder()
-                                .putInt("id", added.getId())
-                                .build();
+                        Log.d(TAG, "Lat:" + added.getLat());
+                        if (-1 != added.getLat()) {
+                            // Here we handle reminders with location set
+                            GeofencingClient fencingClient = LocationServices.getGeofencingClient(getApplicationContext());
 
-                        long timeout = added.getReminderTime().getTime() - new Date().getTime();
+                            Geofence fence = new Geofence.Builder()
+                                    .setRequestId(String.valueOf(added.getId()))
+                                    .setCircularRegion(added.getLat(), added.getLon(), Float.valueOf(GEOFENCE_RADIUS))
+                                    .setExpirationDuration(Long.valueOf(GEOFENCE_EXPIRATION))
+                                    .setLoiteringDelay(GEOFENCE_DWELL_DELAY)
+                                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                                    .build();
 
-                        WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(ReminderWorker.class)
-                            .addTag(String.valueOf(msg.arg1))
-                            .setInputData(workerData)
-                            .setInitialDelay(timeout, TimeUnit.MILLISECONDS)
-                            .build();
+                            GeofencingRequest.Builder fenceReqBuilder = new GeofencingRequest.Builder();
+                            fenceReqBuilder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER | GeofencingRequest.INITIAL_TRIGGER_DWELL);
+                            fenceReqBuilder.addGeofence(fence);
 
-                        WorkManager.getInstance(getApplicationContext()).enqueue(uploadWorkRequest);
+                            GeofencingRequest fenceReq = fenceReqBuilder.build();
+
+                            fencingClient.addGeofences(fenceReq, getGeofencePendingIntent(added.getId()))
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Log.d(TAG, "GeoFence added succesfully.");
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.e(TAG, "GeoFence failed", e);
+                                        }
+                                    });
+                        } else {
+                            Data workerData = new Data.Builder()
+                                    .putInt("id", added.getId())
+                                    .build();
+
+                            long timeout = added.getReminderTime().getTime() - new Date().getTime();
+
+                            WorkRequest uploadWorkRequest = new OneTimeWorkRequest.Builder(ReminderWorker.class)
+                                    .addTag(String.valueOf(msg.arg1))
+                                    .setInputData(workerData)
+                                    .setInitialDelay(timeout, TimeUnit.MILLISECONDS)
+                                    .build();
+
+                            WorkManager.getInstance(getApplicationContext()).enqueue(uploadWorkRequest);
+                        }
                     }
                     break;
 
@@ -139,4 +185,9 @@ public class WorkManagerService extends Service {
         return START_STICKY;
     }
 
+    private PendingIntent getGeofencePendingIntent(int Id) {
+        Intent intent = new Intent(this, RemindererGeofenceReceiver.class);
+        intent.putExtra("id", Id);
+        return PendingIntent.getBroadcast(this, Id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
 }

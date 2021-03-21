@@ -48,10 +48,12 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
         holder.message.setText(r.getMessage());
 
         Date reminderTime = r.getReminderTime();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(reminderTime);
-        String formattedTime = new SimpleDateFormat("dd.MM.yyyy H:mm").format(calendar.getTime());
-        holder.reminderTime.setText(formattedTime);
+        if (null != reminderTime) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(reminderTime);
+            String formattedTime = new SimpleDateFormat("dd.MM.yyyy H:mm").format(calendar.getTime());
+            holder.reminderTime.setText(formattedTime);
+        }
 
         holder.delete.setOnClickListener(v -> {
             mReminderListFiltered.remove(mReminderListFiltered.get(position));
@@ -80,8 +82,7 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
                 } else {
                     Date now = new Date();
                     for (Reminder reminder : mReminderList) {
-                        Log.d("Date", "Date: " + reminder.getReminderTime());
-                        if (reminder.getReminderTime().before(now))
+                        if (null != reminder.getReminderTime() && reminder.getReminderTime().before(now))
                             resultsModel.add(reminder);
                     }
                     filterResults.count = resultsModel.size();

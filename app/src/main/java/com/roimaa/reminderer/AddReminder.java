@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,12 +27,16 @@ import static android.view.MotionEvent.ACTION_UP;
 public class AddReminder extends AppCompatActivity implements DatePicker.DatePickedListener, TimePicker.TimePickedListener {
     private final static String TAG = AddReminder.class.getSimpleName();
     private final static int LOGIN_RESULT = 123;
+    private final static int LOCATION_RESULT = 124;
 
     private TextView mEditMessage;
     private TextView mEditDate;
     private TextView mEditTime;
+    private ImageButton mPickLocation;
     private Button mButton;
     private CheckBox mRemindMe;
+    private double mLatitude = -1;
+    private double mLongitude = -1;
     private int mReminderId;
 
     @SuppressLint({"ClickableViewAccessibility", "SimpleDateFormat"})
@@ -47,6 +52,7 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
         mEditMessage = findViewById(R.id.editMessage);
         mEditDate = findViewById(R.id.editTextDate);
         mEditTime = findViewById(R.id.editTextTime);
+        mPickLocation = findViewById(R.id.pickLocation);
         mRemindMe = findViewById(R.id.remindMe);
         mButton = findViewById(R.id.button);
         mButton.setOnClickListener(createReminder);
@@ -84,6 +90,15 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
                 return false;
             }
         });
+
+        mPickLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent pickLocation = new Intent(AddReminder.this, LocationActivity.class);
+                pickLocation.putExtra("pickLocation", true);
+                startActivityForResult(pickLocation, LOCATION_RESULT);
+            }
+        });
     }
 
     @Override
@@ -101,15 +116,23 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
     @Override
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.w(TAG, "result received: " + requestCode);
 
         switch (requestCode) {
             case LOGIN_RESULT:
-                Log.w(TAG, "result received: " + requestCode);
                 if (RESULT_OK == resultCode) {
                     mReminderId = data.getIntExtra("reminderId", -1);
                     Log.w(TAG, "mReminderId: " + mReminderId);
                 } else {
                     this.finish();
+                }
+                break;
+
+            case LOCATION_RESULT:
+                if (RESULT_OK == resultCode) {
+                    mLatitude = data.getDoubleExtra("latitude", -1);
+                    mLongitude = data.getDoubleExtra("longitude", -1);
+                    Log.d(TAG, "Location set: " + mLatitude + " " + mLongitude);
                 }
                 break;
 
@@ -136,9 +159,11 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
     }
 
     private boolean checkValid() {
-        boolean valid = !mEditMessage.getText().toString().isEmpty();
-        valid &= !(mEditDate.getCurrentHintTextColor() == getColor(R.color.red));
-        valid &= !(mEditTime.getCurrentHintTextColor() == getColor(R.color.red));
+        boolean messageValid = !mEditMessage.getText().toString().isEmpty();
+        boolean timeValid = !(mEditDate.getCurrentHintTextColor() == getColor(R.color.red));
+        timeValid &= !(mEditTime.getCurrentHintTextColor() == getColor(R.color.red));
+        boolean locationValid = (mLatitude != -1);
+        boolean valid = messageValid && (timeValid || locationValid);
 
         if (!valid) {
             Toast.makeText(getApplicationContext(), R.string.reminder_not_valid, Toast.LENGTH_SHORT).show();
@@ -151,36 +176,46 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
         public void onClick(View v) {
             if (!checkValid()) return;
 
+            final Calendar c = Calendar.getInstance();
+            final Calendar d = Calendar.getInstance();
+
             User who = DBHelper.getInstance(getApplicationContext()).getUser(PrefUtils.getString(
                     getApplicationContext(), PrefUtils.LOGGED_USER));
 
-            String time = mEditTime.getHint().toString();
-            String[] separated = time.split(":");
-            int hours = Integer.parseInt(separated[0]);
-            int mins = Integer.parseInt(separated[1]);
+            if (!mEditTime.getText().toString().isEmpty()) {
+                String time = mEditTime.getText().toString();
+                String[] separated = time.split(":");
+                int hours = Integer.parseInt(separated[0]);
+                int mins = Integer.parseInt(separated[1]);
 
-            final Calendar c = Calendar.getInstance();
-            final Calendar d = Calendar.getInstance();
-            try {
-                c.setTime(new SimpleDateFormat("dd.MM.yyyy").parse(mEditDate.getHint().toString()));
-            } catch (ParseException e) {
+                try {
+                    c.setTime(new SimpleDateFormat("dd.MM.yyyy").parse(mEditDate.getHint().toString()));
+                } catch (ParseException e) {
 
+                }
+                d.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DATE), hours, mins);
             }
-            d.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DATE), hours, mins);
-
 
             if (-1 == mReminderId) {
                 Reminder toAdd = new Reminder();
                 toAdd.setUserId(who.getUid());
                 toAdd.setMessage(mEditMessage.getText().toString());
                 toAdd.setCreationTime(new Date());
-                toAdd.setReminderTime(d.getTime());
+                if (!mEditTime.getText().toString().isEmpty()) {
+                    toAdd.setReminderTime(d.getTime());
+                }
+                toAdd.setLat(mLatitude);
+                toAdd.setLon(mLongitude);
                 toAdd.setRemind(mRemindMe.isChecked());
                 DBHelper.getInstance(getApplicationContext()).addReminder(toAdd);
             } else {
                 Reminder toEdit = DBHelper.getInstance(getApplicationContext()).getReminder(mReminderId);
                 toEdit.setMessage(mEditMessage.getText().toString());
-                toEdit.setReminderTime(d.getTime());
+                if (!mEditTime.getText().toString().isEmpty()) {
+                    toEdit.setReminderTime(d.getTime());
+                }
+                toEdit.setLat(mLatitude);
+                toEdit.setLon(mLongitude);
                 toEdit.setRemind(mRemindMe.isChecked());
                 DBHelper.getInstance(getApplicationContext()).updateReminder(toEdit);
             }
@@ -192,20 +227,20 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
     public void onDatePicked(int selectedYear, int selectedMonth, int selectedDay) {
         Calendar c = Calendar.getInstance();
         c.set(selectedYear, selectedMonth, selectedDay);
-        mEditDate.setHint(new SimpleDateFormat("dd.MM.yyyy").format(c.getTime()));
+        mEditDate.setText(new SimpleDateFormat("dd.MM.yyyy").format(c.getTime()));
 
         if (c.compareTo(Calendar.getInstance()) < 0) {
-            mEditDate.setHintTextColor(getColor(R.color.red));
+            mEditDate.setTextColor(getColor(R.color.red));
         } else {
-            mEditDate.setHintTextColor(getColor(R.color.hint));
-            mEditTime.setHintTextColor(getColor(R.color.hint));
+            mEditDate.setTextColor(getColor(R.color.black));
+            mEditTime.setTextColor(getColor(R.color.black));
         }
     }
 
     @Override
     public void onTimePicked(int hourOfDay, int minute) {
         String newTime = String.valueOf(hourOfDay) + ":" + String.valueOf(minute);
-        mEditTime.setHint(newTime);
+        mEditTime.setText(newTime);
 
         final Calendar c = Calendar.getInstance();
         final Calendar d = Calendar.getInstance();
@@ -217,9 +252,9 @@ public class AddReminder extends AppCompatActivity implements DatePicker.DatePic
         d.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DATE), hourOfDay, minute);
 
         if (d.compareTo(Calendar.getInstance()) < 0) {
-            mEditTime.setHintTextColor(getColor(R.color.red));
+            mEditTime.setTextColor(getColor(R.color.red));
         } else {
-            mEditTime.setHintTextColor(getColor(R.color.hint));
+            mEditTime.setTextColor(getColor(R.color.black));
         }
     }
 }
